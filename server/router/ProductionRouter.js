@@ -1,0 +1,15 @@
+const express = require('express')
+const router = express.Router()
+const Production = require('../controller/ProductionController')
+const cors = require('cors')
+router.use(cors())
+router.post('/dashboard', Production.authproduction, Production.dashboard)
+router.post('/goodsdetails', Production.authproduction, Production.goodsdetails)
+router.post('/addgoods', Production.addgoods)
+router.post('/startbarcode', Production.startbarcode)
+router.post('/working', Production.authproduction, Production.workingflow)
+router.post('/updategood', Production.updategood)
+router.post('/scanqrcode', Production.scanqrcode)
+router.post('/readbarcode', Production.barcoderead)
+
+module.exports = router

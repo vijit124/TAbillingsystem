@@ -1,0 +1,125 @@
+import React, { Component } from 'react';
+import { withStyles } from '@material-ui/core/styles';
+import MaterialTable from 'material-table'
+import {
+    Grid, Container,
+} from '@material-ui/core';
+import axios from 'axios';
+import $links from './variable'
+import { Link } from 'react-router-dom';
+
+const useStyles = (theme) => ({
+    root: {
+        [theme.breakpoints.up('sm')]: {
+            marginLeft: 70,
+        },
+    },
+    Card: {
+        boxShadow: '0 4px 16px 0 rgba(0,0,0,0.4)',
+        borderRadius: 5
+    },
+});
+class RawStore extends Component {
+
+    constructor() {
+        super()
+        this.state = {
+            productdetails: [],
+        }
+        var displaytype = {
+            cookies: localStorage.getItem('jwt')
+        }
+        axios.post($links.adminorders, displaytype)
+            .then(res => {
+                if (res.data.auth) {
+                    window.location.replace('/')
+                }
+                else if (res.data.errors) {
+                    alert(res.data.message)
+                }
+                else {
+                    this.setState({ productdetails: res.data.message })
+                }
+            })
+    }
+
+    render() {
+        const nowrap = { whiteSpace: 'nowrap' }
+        var { productdetails = [] } = this.state
+        return (
+            <div>
+                <Container>
+                    <Grid container spacing={3} >
+                        <Grid item xs={12} sm={12}>
+                            <MaterialTable style={{ borderRadius: 15, borderBottom: '3px solid #f0bc11', borderTop: '3px solid #4cc42d', boxShadow: '0 8px 16px 0 rgba(0,0,0,0.4)' }}
+                                title="Orders Created"
+                                columns={[
+                                    { title: 'ID', field: 'id', editable: 'never' },
+                                    { title: 'Product Name', field: 'productname', cellStyle: nowrap, headerStyle: nowrap },
+                                    { title: 'Batch', field: 'batch', cellStyle: nowrap, headerStyle: nowrap },
+                                    { title: 'Start On', field: 'start_date',editable: 'never', headerStyle: nowrap, cellStyle: nowrap },
+                                    { title: 'Quantity', field: 'quantity', headerStyle: nowrap, cellStyle: nowrap },
+                                    { title: 'Quantity Left', field: 'quantity_left', headerStyle: nowrap, cellStyle: nowrap },
+                                    {
+                                        title: 'QR Code', field: 'qrcode',editable: 'never', headerStyle: nowrap, cellStyle: nowrap, render: rowData => (
+                                            <div>
+                                                <Link onClick={() => {
+                                                    localStorage.setItem('qrcode', rowData.qrcode)
+                                                    const win = window.open("/displayqrcode", "_blank");
+                                                    win.focus();
+                                                }}
+                                                >{rowData.qrcode}</Link>
+                                            </div>
+                                        )
+                                    },
+                                ]}
+                                data={productdetails.map(productdetails => (
+                                    {
+                                        id: productdetails.id, mobile: productdetails.mobile,
+                                        productname: productdetails.productname, batch: productdetails.batch,
+                                        start_date: productdetails.start_date, quantity: productdetails.quantity,
+                                        quantity_left: productdetails.quantity_left, qrcode: productdetails.qrcode
+                                    }))}
+                                options={{
+                                    pageSize: 10,
+                                    actionsColumnIndex: -1,
+                                }}
+                                editable={{
+                                    onRowUpdate: (newData, oldData) =>
+                                        new Promise((resolve, reject) => {
+                                            setTimeout(() => {
+                                                const dataUpdate = [...productdetails];
+                                                const index = oldData.tableData.id;
+                                                dataUpdate[index] = newData;
+                                                this.setState({ productdetails: [...dataUpdate] });
+                                                var updatedrawmaterials = {
+                                                    id: newData.id,
+                                                    productname: newData.productname,
+                                                    batch: newData.batch,
+                                                    quantity: newData.quantity,
+                                                    quantity_left: newData.quantity_left
+                                                }
+                                                axios.post($links.adminupdateorder, updatedrawmaterials)
+                                                    .then(res => {
+                                                        if (res.data.errors === false) {
+                                                            alert(res.data.message)
+                                                        } else {
+                                                            this.setState({ errors: res.data.message })
+                                                            alert(this.state.errors)
+                                                        }
+                                                    })
+                                                resolve();
+                                            }, 500)
+                                        }),
+                                }}
+
+                            />
+                        </Grid>
+                    </Grid>
+                    <br />
+                </Container>
+            </div >
+        );
+    }
+}
+export default withStyles(useStyles)(RawStore)

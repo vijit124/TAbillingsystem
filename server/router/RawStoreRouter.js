@@ -1,0 +1,13 @@
+const express = require('express')
+const router = express.Router()
+const rawstore = require('../controller/RawStoreController')
+const cors = require('cors')
+router.use(cors())
+router.post('/dashboard', rawstore.authrawstore, rawstore.dashboard)
+router.post('/add', rawstore.addrawmaterial)
+router.post('/edit', rawstore.editrawmatarial)
+router.post('/delete', rawstore.delete)
+router.post('/addorder', rawstore.addorder) 
+router.post('/displayoutitem',rawstore.authrawstore, rawstore.displayoutitem)
+router.post('/rawmaterialchange', rawstore.rawmaterialchange)
+module.exports = router
